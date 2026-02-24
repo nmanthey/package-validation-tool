@@ -363,6 +363,16 @@ def add_compare_diffs_parser(parent):
         type=str,
         help="Package name to filter comparison (optional)",
     )
+    parser.add_argument(
+        "--normalize-dates",
+        action="store_true",
+        help="Ignore date differences when comparing files",
+    )
+    parser.add_argument(
+        "--normalize-versions",
+        action="store_true",
+        help="Ignore version string differences when comparing files",
+    )
     add_output_json_parameter(parser)
 
 
