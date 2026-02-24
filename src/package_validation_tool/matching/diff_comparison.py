@@ -3,6 +3,7 @@
 
 """Module to compare diffs directories from two package validation runs."""
 
+import difflib
 import logging
 import os
 import re
@@ -143,6 +144,18 @@ def _compare_files(
     return content_a == content_b
 
 
+def _write_diff(path_a: str, path_b: str, output_path: Path) -> None:
+    """Write unified diff between two files to output_path."""
+    with open(path_a, "r", encoding="utf-8", errors="replace") as f:
+        lines_a = f.readlines()
+    with open(path_b, "r", encoding="utf-8", errors="replace") as f:
+        lines_b = f.readlines()
+    diff = difflib.unified_diff(lines_a, lines_b, fromfile=path_a, tofile=path_b)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.writelines(diff)
+
+
 def compare_diffs_directories(
     dir_a: str,
     dir_b: str,
@@ -150,6 +163,7 @@ def compare_diffs_directories(
     output_json_path: Optional[str] = None,
     normalize_dates: bool = False,
     normalize_versions: bool = False,
+    output_diffs: Optional[str] = None,
 ) -> bool:
     """
     Compare two diffs directories to check if package-to-upstream differences are identical.
@@ -161,6 +175,7 @@ def compare_diffs_directories(
         output_json_path: Optional path to write JSON output
         normalize_dates: If True, ignore date differences when comparing
         normalize_versions: If True, ignore version string differences when comparing
+        output_diffs: Optional directory to write diff-of-diffs for differing files
 
     Returns:
         True if diffs are identical, False otherwise
@@ -224,6 +239,9 @@ def compare_diffs_directories(
                 files_a[file_path], files_b[file_path], normalize_dates, versions
             ):
                 archives[archive_name].files_with_different_content.append(file_path)
+                if output_diffs:
+                    diff_path = Path(output_diffs) / f"{file_path}.diff"
+                    _write_diff(files_a[file_path], files_b[file_path], diff_path)
 
     identical = all(diff.identical for diff in archives.values())
 

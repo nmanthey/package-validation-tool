@@ -373,6 +373,11 @@ def add_compare_diffs_parser(parent):
         action="store_true",
         help="Ignore version string differences when comparing files",
     )
+    parser.add_argument(
+        "--output-diffs",
+        type=str,
+        help="Directory to write diff-of-diffs for files with different content",
+    )
     add_output_json_parameter(parser)
 
 
